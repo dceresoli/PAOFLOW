@@ -53,6 +53,12 @@ def parse_qe_data_file_schema ( data_controller, fname ):
     b_vectors.append(vec_array(i,basis_elem,'reciprocal_lattice/b'))
   a_vectors = np.array(a_vectors)/alat
   b_vectors = np.array(b_vectors)
+  ecutwfc = float(basis_elem.find('ecutwfc').text)
+  ecutrho = float(basis_elem.find('ecutwfc').text)
+  mpg = basis_elem.find('fft_grid').attrib
+  fft_rho = int(mpg['nr1']), int(mpg['nr2']), int(mpg['nr3'])
+  mpg = basis_elem.find('fft_smooth').attrib
+  fft_wfc = int(mpg['nr1']), int(mpg['nr2']), int(mpg['nr3'])
 
   atoms = []
   tau = np.empty((natoms,3), dtype=float)
@@ -116,12 +122,12 @@ def parse_qe_data_file_schema ( data_controller, fname ):
 
   omega = alat**3 * a_vectors[0,:].dot(np.cross(a_vectors[1,:],a_vectors[2,:]))
 
-  attrs = [('qe_version',qe_version),('alat',alat),('nk1',nk1),('nk2',nk2),('nk3',nk3),('natoms',natoms),('Efermi',Efermi),('omega',omega),('dftSO',dftSO),('dftMAG',dftMag)]
+  attrs = [('qe_version',qe_version),('alat',alat),('nk1',nk1),('nk2',nk2),('nk3',nk3),('natoms',natoms),('Efermi',Efermi),('omega',omega),('dftSO',dftSO),('dftMAG',dftMag),('ecutrho',ecutrho),('ecutwfc',ecutwfc)]
   for s,v in attrs:
     attr[s] = v
 
   spec = [(species[i],pseudos[i]) for i in range(len(species))]
-  arrys = [('tau',tau),('atoms',atoms),('species',spec),('a_vectors',a_vectors),('b_vectors',b_vectors),('equiv_atom',eq_atoms),('sym_rot',sym_rot),('sym_shift',shifts),('sym_info',sym_info),('sym_TR',time_rev)]
+  arrys = [('tau',tau),('atoms',atoms),('species',spec),('a_vectors',a_vectors),('b_vectors',b_vectors),('equiv_atom',eq_atoms),('sym_rot',sym_rot),('sym_shift',shifts),('sym_info',sym_info),('sym_TR',time_rev), ('fft_rho',fft_rho), ('fft_wfc',fft_wfc)]
   for s,v in arrys:
     arry[s] = v
 

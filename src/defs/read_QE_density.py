@@ -16,7 +16,50 @@
 # or http://www.gnu.org/copyleft/gpl.txt .
 #
 
+# contributed by Davide Ceresoli <dceresoli@gmail.com>
+from scipy import fftpack as FFT
+from scipy.io import FortranFile
 import numpy as np
+
+
+def read_QE_density(paoflow, spin=False, fft_grid=None):
+    """Read the charge or spin density from a QE .dat file and transform to real space
+    optionally on a larger FFT grid.
+    
+    usage: rho = read_QE_density(paoflow, spin=False, fft_grid=(32,32,32))
+
+    """
+
+    arry, attr = paoflow.data_controller.data_dicts()
+    fname = attr['savedir']+'/charge-density.dat'
+    if spin:
+        fname = attr['savedir']+'/spin-density.dat'
+        
+    with FortranFile(fname, 'r') as f:
+        gamma_only, ngm, nspin = f.read_ints(np.int32)
+        bg = f.read_reals(np.float64).reshape(3,3,order='F')
+        mill = f.read_ints(np.int32).reshape(3,ngm,order='F')
+        rho = f.read_reals(np.complex128)
+
+    gamma_only = (gamma_only != 0)
+    omega = attr['omega']
+    nr1, nr2, nr3 = arry['fft_rho']
+    if fft_grid is not None:
+        nr1, nr2, nr3 = fft_grid
+    
+    # transform to real space 
+    rhog = np.zeros((nr1,nr2,nr3), dtype=complex)
+    rhor = np.zeros((nr1,nr2,nr3), dtype=complex)
+
+    for ig in range(ngm):
+        rhog[mill[0,ig],mill[1,ig],mill[2,ig]] = rho[ig]
+        if gamma_only:
+            rhog[-mill[0,ig],-mill[1,ig],-mill[2,ig]] = np.conj(rho[ig])
+            
+    rhor = FFT.ifftn(rhog) * (nr1*nr2*nr3)
+    return np.real(rhor)
+
+
 
 def write_xsf(filename, paoflow, data=None):
     """Write the current crystal structure to file and optionally a 3d data set
