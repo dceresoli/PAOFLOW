@@ -423,8 +423,7 @@ class PAOFLOW:
     if 'ibrav' not in attr:
       if ibrav is None and self.rank == 0:
         if self.rank == 0:
-          print('Must specify \'ibrav\' in the inputfile or as an optional argument to \'calc_bands\'')
-        quit()
+          raise LogicError('Must specify \'ibrav\' in the inputfile or as an optional argument to \'calc_bands\'')
       else:
         attr['ibrav'] = ibrav
 
@@ -681,8 +680,7 @@ mo    '''
 
     if attr['spol'] is None or attr['ipol'] is None or attr['jpol'] is None:
       if self.rank == 0:
-        print('Must specify \'spol\', \'ipol\', and \'jpol\'')
-      quit()
+        raise LogicError('Must specify \'spol\', \'ipol\', and \'jpol\'')
 
     if spin_Hall and 'Sj' not in arrays:
       self.spin_operator(spin_orbit=attr['do_spin_orbit'])
@@ -950,8 +948,7 @@ mo    '''
       else:
         if 'deltakp' not in arrays:
           if self.rank == 0:
-            print('Perform calc_adaptive_smearing() to calculate \'deltakp\' before calling calc_dos_adaptive()')
-          quit()
+            raise LogicError('Perform calc_adaptive_smearing() to calculate \'deltakp\' before calling calc_dos_adaptive()')
 
         if do_dos:
           from .defs.do_dos import do_dos_adaptive
